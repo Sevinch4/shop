@@ -55,6 +55,7 @@ func (o ordersRepo) Update(order models.Order) error {
 	}
 	return nil
 }
+
 func (o ordersRepo) Delete(id string) error {
 	if _, err := o.DB.Exec(`delete from orders where id = $1`, id); err != nil {
 		return err

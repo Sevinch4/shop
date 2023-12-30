@@ -11,6 +11,7 @@ type Store struct {
 	UserRepo     usersRepo
 	OrdersRepo   ordersRepo
 	ProductsRepo productsRepo
+	OrderProduct orderProduct
 }
 
 func New(cfg config.Config) (Store, error) {
@@ -24,10 +25,12 @@ func New(cfg config.Config) (Store, error) {
 	user := NewUsersRepo(db)
 	order := NewOrdersRepo(db)
 	product := NewProductsRepo(db)
+	ordersProduct := NewOrdersProduct(db)
 
 	return Store{DB: db,
 		UserRepo:     user,
 		OrdersRepo:   order,
 		ProductsRepo: product,
+		OrderProduct: ordersProduct,
 	}, err
 }
