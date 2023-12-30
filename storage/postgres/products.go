@@ -54,7 +54,7 @@ func (p productsRepo) GetList() ([]models.Product, error) {
 
 func (p productsRepo) Update(prod models.Product) error {
 	if _, err := p.DB.Exec(`update products set price = $1,name = $2 where id = $3`,
-		&prod.ID, &prod.Price, &prod.Name); err != nil {
+		&prod.Price, &prod.Name, &prod.ID); err != nil {
 		return err
 	}
 	return nil

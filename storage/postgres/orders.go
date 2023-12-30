@@ -50,7 +50,7 @@ func (o ordersRepo) GetList() ([]models.Order, error) {
 }
 
 func (o ordersRepo) Update(order models.Order) error {
-	if _, err := o.DB.Exec(`update orders set amount = $1, user_id = $2, created_at = $3 where id = $4`, &order.ID, &order.Amount, &order.UserID, &order.CreatedAt); err != nil {
+	if _, err := o.DB.Exec(`update orders set amount = $1, user_id = $2, created_at = $3 where id = $4`, &order.Amount, &order.UserID, &order.CreatedAt, &order.ID); err != nil {
 		return err
 	}
 	return nil

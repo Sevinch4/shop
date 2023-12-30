@@ -20,28 +20,28 @@ func main() {
 
 	con := controller.New(store)
 
-	//con.CreateUser()
-	//con.GetUserByID()
-	//con.GetUserList()
-	//con.UpdateUser()
-	//con.DeleteUser()
+	con.CreateUser()
+	con.GetUserByID()
+	con.GetUserList()
+	con.UpdateUser()
+	con.DeleteUser()
 
-	//con.CreateOrders()
-	//con.GetOrdersByID()
-	//con.GetOrdersList()
+	con.CreateOrders()
+	con.GetOrdersByID()
+	con.GetOrdersList()
 	con.UpdateOrder()
-	//con.DeleteOrder()
+	con.DeleteOrder()
 
-	//con.CreateProduct()
-	//con.GetProductByID()
-	//con.GetProductList()
-	//con.UpdateProduct()-----error
-	//con.DeleteProduct()
+	con.CreateProduct()
+	con.GetProductByID()
+	con.GetProductList()
+	con.UpdateProduct()
+	con.DeleteProduct()
 
-	//con.CreateOrderProduct()
-	//con.GetOrderProductByID()
-	//con.GetOrderProductsList()
-	//con.UpdateOrderProduct()
-	//con.DeleteOrderProduct()
+	con.CreateOrderProduct()
+	con.GetOrderProductByID()
+	con.GetOrderProductsList()
+	con.UpdateOrderProduct()
+	con.DeleteOrderProduct()
 
 }
