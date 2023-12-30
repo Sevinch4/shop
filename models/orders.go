@@ -8,3 +8,11 @@ type Order struct {
 	UserID    string
 	CreatedAt time.Time
 }
+
+type OrderProducts struct {
+	ID        string
+	OrderId   string
+	ProductId string
+	Quantity  int
+	Price     int
+}

@@ -31,4 +31,11 @@ func main() {
 	//con.GetOrdersList()
 	//con.UpdateOrder() --- error
 	//con.DeleteOrder()
+
+	//con.CreateProduct()
+	//con.GetProductByID()
+	//con.GetProductList()
+	//con.UpdateProduct()-----error
+	//con.DeleteProduct()
+
 }
