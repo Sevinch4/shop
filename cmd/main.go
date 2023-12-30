@@ -26,4 +26,9 @@ func main() {
 	//con.UpdateUser()
 	//con.DeleteUser()
 
+	//con.CreateOrders()
+	//con.GetOrdersByID()
+	//con.GetOrdersList()
+	//con.UpdateOrder() --- error
+	//con.DeleteOrder()
 }

@@ -7,8 +7,9 @@ import (
 )
 
 type Store struct {
-	DB       *sql.DB
-	UserRepo usersRepo
+	DB         *sql.DB
+	UserRepo   usersRepo
+	OrdersRepo ordersRepo
 }
 
 func New(cfg config.Config) (Store, error) {
@@ -20,7 +21,10 @@ func New(cfg config.Config) (Store, error) {
 	}
 
 	user := NewUsersRepo(db)
+	order := NewOrdersRepo(db)
 
 	return Store{DB: db,
-		UserRepo: user}, err
+		UserRepo:   user,
+		OrdersRepo: order,
+	}, err
 }

@@ -102,6 +102,8 @@ func getUsersInfo() models.User {
 
 		fmt.Print("input phone: ")
 		fmt.Scan(&phone)
+	} else {
+		fmt.Println("not found")
 	}
 
 	if id != "" {
