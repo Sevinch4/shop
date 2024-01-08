@@ -1,121 +1,123 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"shop/models"
 )
 
-func (c Controller) CreateOrderProduct() {
-	order := getOrderProductInfo()
-
-	if _, err := c.Store.OrderProduct.Insert(order); err != nil {
-		log.Fatalln("error is while inserting", err.Error())
-		return
+func (c Controller) OrderProducts(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		c.CreateOrderProduct(w, r)
+	case http.MethodGet:
+		values := r.URL.Query()
+		if _, ok := values["id"]; !ok {
+			c.GetOrderProductsList(w, r)
+		} else {
+			c.GetOrderProductByID(w, r)
+		}
+	case http.MethodPut:
+		c.UpdateOrderProduct(w, r)
+	case http.MethodDelete:
+		c.DeleteOrderProduct(w, r)
 	}
-	fmt.Println("user added")
 }
 
-func (c Controller) GetOrderProductByID() {
-	id := ""
-	fmt.Print("input id: ")
-	fmt.Scan(&id)
+func (c Controller) CreateOrderProduct(w http.ResponseWriter, r *http.Request) {
+	order := models.OrderProducts{}
+
+	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
+		fmt.Println("error is while decoding", err.Error())
+		handleResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	id, err := c.Store.OrderProduct.Insert(order)
+	if err != nil {
+		log.Fatalln("error is while inserting", err.Error())
+		handleResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	resp, err := c.Store.OrderProduct.GetByID(id)
+	if err != nil {
+		fmt.Println("error is while getting by id", err.Error())
+		handleResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	handleResponse(w, http.StatusOK, resp)
+}
+
+func (c Controller) GetOrderProductByID(w http.ResponseWriter, r *http.Request) {
+	values := r.URL.Query()
+	id := values["id"][0]
 
 	order, err := c.Store.OrderProduct.GetByID(id)
 	if err != nil {
 		fmt.Println("error is while get by id", err)
+		handleResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	fmt.Println("order: ", order)
+
+	handleResponse(w, http.StatusOK, order)
 }
 
-func (c Controller) GetOrderProductsList() {
+func (c Controller) GetOrderProductsList(w http.ResponseWriter, r *http.Request) {
 	orders, err := c.Store.OrderProduct.GetList()
 	if err != nil {
 		fmt.Print("error is while get list", err.Error())
+		handleResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	fmt.Println("orders: ", orders)
+
+	handleResponse(w, http.StatusOK, orders)
 }
 
-func (c Controller) UpdateOrderProduct() {
-	order := getOrderProductInfo()
+func (c Controller) UpdateOrderProduct(w http.ResponseWriter, r *http.Request) {
+	values := r.URL.Query()
+	id := values["id"][0]
 
-	if err := c.Store.OrderProduct.Update(order); err != nil {
+	orderProduct := models.OrderProducts{}
+
+	if err := json.NewDecoder(r.Body).Decode(&orderProduct); err != nil {
+		fmt.Println("error is while decoding", err.Error())
+		handleResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if orderProduct.ID != id {
+		fmt.Println("car ID not mismatch")
+		handleResponse(w, http.StatusBadRequest, orderProduct.ID)
+		return
+	}
+
+	if err := c.Store.OrderProduct.Update(orderProduct); err != nil {
 		fmt.Print("error is while updating", err.Error())
 		return
 	}
-	fmt.Println("order updated")
+
+	resp, err := c.Store.OrderProduct.GetByID(id)
+	if err != nil {
+		fmt.Println("error is while getting by id", err.Error())
+		handleResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	handleResponse(w, http.StatusOK, resp)
 }
 
-func (c Controller) DeleteOrderProduct() {
-	id := ""
-	fmt.Print("input id: ")
-	fmt.Scan(&id)
+func (c Controller) DeleteOrderProduct(w http.ResponseWriter, r *http.Request) {
+	values := r.URL.Query()
+	id := values["id"][0]
 
 	if err := c.Store.OrderProduct.Delete(id); err != nil {
 		fmt.Println("error is while deleting user", err.Error())
 		return
 	}
-	fmt.Println("user deleted!")
-}
 
-func getOrderProductInfo() models.OrderProducts {
-	var (
-		id, order_id, pro_id string
-		cmd, price, quantity int
-	)
-	fmt.Print(`
-					1 - create
-					2 - update
-`)
-	fmt.Scan(&cmd)
-
-	if cmd == 2 {
-		fmt.Print("input id: ")
-		fmt.Scan(&id)
-
-		fmt.Print("input order id: ")
-		fmt.Scan(&order_id)
-
-		fmt.Print("input product id: ")
-		fmt.Scan(&pro_id)
-
-		fmt.Print("input quantity: ")
-		fmt.Scan(&quantity)
-
-		fmt.Print("input price: ")
-		fmt.Scan(&price)
-	} else if cmd == 1 {
-		fmt.Print("input order id: ")
-		fmt.Scan(&order_id)
-
-		fmt.Print("input product id: ")
-		fmt.Scan(&pro_id)
-
-		fmt.Print("input quantity: ")
-		fmt.Scan(&quantity)
-
-		fmt.Print("input price: ")
-		fmt.Scan(&price)
-	} else {
-		fmt.Println(cmd, "not found")
-	}
-
-	if id != "" {
-		return models.OrderProducts{
-			ID:        id,
-			OrderId:   order_id,
-			ProductId: pro_id,
-			Quantity:  quantity,
-			Price:     price,
-		}
-	}
-	return models.OrderProducts{
-		OrderId:   order_id,
-		ProductId: pro_id,
-		Quantity:  quantity,
-		Price:     price,
-	}
-
+	handleResponse(w, http.StatusOK, id)
 }

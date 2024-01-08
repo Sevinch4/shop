@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	_ "github.com/lib/pq"
 	"log"
+	"net/http"
 	"shop/config"
 	"shop/controller"
 	"shop/storage/postgres"
@@ -20,28 +22,12 @@ func main() {
 
 	con := controller.New(store)
 
-	con.CreateUser()
-	con.GetUserByID()
-	con.GetUserList()
-	con.UpdateUser()
-	con.DeleteUser()
+	http.HandleFunc("/user", con.User)
+	http.HandleFunc("/product", con.Product)
+	http.HandleFunc("/orders", con.Orders)
+	http.HandleFunc("/ordered_products", con.OrderProducts)
 
-	con.CreateOrders()
-	con.GetOrdersByID()
-	con.GetOrdersList()
-	con.UpdateOrder()
-	con.DeleteOrder()
-
-	con.CreateProduct()
-	con.GetProductByID()
-	con.GetProductList()
-	con.UpdateProduct()
-	con.DeleteProduct()
-
-	con.CreateOrderProduct()
-	con.GetOrderProductByID()
-	con.GetOrderProductsList()
-	con.UpdateOrderProduct()
-	con.DeleteOrderProduct()
+	fmt.Println("server running......")
+	http.ListenAndServe("localhost:8080", nil)
 
 }

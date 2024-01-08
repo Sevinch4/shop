@@ -1,134 +1,137 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"shop/models"
+	"shop/pkg/check"
 )
 
-func (c Controller) CreateUser() {
-	user := getUsersInfo()
+func (c Controller) User(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		c.CreateUser(w, r)
+	case http.MethodGet:
+		values := r.URL.Query()
+		if _, ok := values["id"]; !ok {
+			c.GetUserList(w, r)
+		} else {
+			c.GetUserByID(w, r)
+		}
+	case http.MethodPut:
+		c.UpdateUser(w, r)
+	case http.MethodDelete:
+		c.DeleteUser(w, r)
+	}
+}
 
-	//if !checkPhoneNumber(user.Phone) {
-	//	fmt.Println("error is while input phone, format phone not correct")
-	//	return
-	//}
+func (c Controller) CreateUser(w http.ResponseWriter, r *http.Request) {
+	user := models.User{}
 
-	if _, err := c.Store.UserRepo.Insert(user); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
+		fmt.Println("error is while decoding data", err.Error())
+		handleResponse(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if !check.PhoneNumber(user.Phone) {
+		fmt.Println("error is while input phone, format phone not correct")
+		handleResponse(w, http.StatusBadRequest, user.Phone)
+		return
+	}
+
+	id, err := c.Store.UserRepo.Insert(user)
+
+	if err != nil {
 		log.Fatalln("error is while inserting", err.Error())
 		return
 	}
-	fmt.Println("user added")
+
+	resp, err := c.Store.UserRepo.GetByID(id)
+	if err != nil {
+		fmt.Println("error is while getting list", err.Error())
+		handleResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	handleResponse(w, http.StatusCreated, resp)
 }
 
-func (c Controller) GetUserByID() {
-	id := ""
-	fmt.Print("input id: ")
-	fmt.Scan(&id)
+func (c Controller) GetUserByID(w http.ResponseWriter, r *http.Request) {
+	values := r.URL.Query()
+	id := values["id"][0]
 
 	user, err := c.Store.UserRepo.GetByID(id)
 	if err != nil {
 		fmt.Println("error is while getting by id", err.Error())
+		handleResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	fmt.Println("user: ", user)
+
+	handleResponse(w, http.StatusOK, user)
 }
 
-func (c Controller) GetUserList() {
+func (c Controller) GetUserList(w http.ResponseWriter, r *http.Request) {
 	users, err := c.Store.UserRepo.GetList()
 	if err != nil {
 		fmt.Println("error is while getting list", err.Error())
+		handleResponse(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	fmt.Println(users)
+
+	handleResponse(w, http.StatusOK, users)
 }
 
-func (c Controller) UpdateUser() {
-	us := getUsersInfo()
+func (c Controller) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	values := r.URL.Query()
+	id := values["id"][0]
+
+	us := models.User{}
+
+	if err := json.NewDecoder(r.Body).Decode(&us); err != nil {
+		fmt.Println("error is while decoding data", err.Error())
+		handleResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if us.ID != id {
+		fmt.Println("car ID not mismatch")
+		handleResponse(w, http.StatusBadRequest, us.ID)
+		return
+	}
+
+	if !check.PhoneNumber(us.Phone) {
+		fmt.Println("error is while input phone, format phone not correct")
+		handleResponse(w, http.StatusBadRequest, us.Phone)
+		return
+	}
+
 	if err := c.Store.UserRepo.Update(us); err != nil {
 		fmt.Println("error is while updating data", err.Error())
 		return
 	}
-	fmt.Println("user updated")
+
+	resp, err := c.Store.UserRepo.GetByID(id)
+
+	if err != nil {
+		fmt.Println("error is while getting by id", err.Error())
+		handleResponse(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	handleResponse(w, http.StatusOK, resp)
 }
 
-func (c Controller) DeleteUser() {
-	id := ""
-	fmt.Print("input id: ")
-	fmt.Scan(&id)
+func (c Controller) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	values := r.URL.Query()
+	id := values["id"][0]
 
 	if err := c.Store.UserRepo.Delete(id); err != nil {
 		fmt.Println("error is while deleting user", err.Error())
 		return
 	}
-	fmt.Println("user deleted!")
+
+	handleResponse(w, http.StatusOK, id)
 }
-
-func getUsersInfo() models.User {
-	var (
-		id, fname, lname, email, phone string
-		cmd                            int
-	)
-	fmt.Print(`
-					1 - create
-					2 - update
-`)
-	fmt.Scan(&cmd)
-
-	if cmd == 2 {
-		fmt.Print("input id: ")
-		fmt.Scan(&id)
-
-		fmt.Print("input first name: ")
-		fmt.Scan(&fname)
-
-		fmt.Print("input last name: ")
-		fmt.Scan(&lname)
-
-		fmt.Print("input email: ")
-		fmt.Scan(&email)
-
-		fmt.Print("input phone: ")
-		fmt.Scan(&phone)
-	} else if cmd == 1 {
-		fmt.Print("input first name: ")
-		fmt.Scan(&fname)
-
-		fmt.Print("input last name: ")
-		fmt.Scan(&lname)
-
-		fmt.Print("input email: ")
-		fmt.Scan(&email)
-
-		fmt.Print("input phone: ")
-		fmt.Scan(&phone)
-	} else {
-		fmt.Println("not found")
-	}
-
-	if id != "" {
-		return models.User{
-			ID:        id,
-			FirstName: fname,
-			LastName:  lname,
-			Email:     email,
-			Phone:     phone,
-		}
-	}
-
-	return models.User{
-		FirstName: fname,
-		LastName:  lname,
-		Email:     email,
-		Phone:     phone,
-	}
-}
-
-//func checkPhoneNumber(phone string) bool {
-//	for _, r := range phone {
-//		if r > '0' || r < '9' || r != '+' {
-//			return false
-//		}
-//	}
-//	return true
-//}
